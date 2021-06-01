@@ -12,14 +12,20 @@ ELO_MAP = {
     "Diamond": 2000,
 }
 
+
+
+def get_elo_from_rank(rank, lp):
+    division, tier = rank.split(' ')
+    return ELO_MAP[division] - int(tier) * 100 + int(lp)
+
+
 def get_ranks_from_html(names, stats):
     tuples = zip(names, stats)
     rank = []
     for name, stat in tuples:
         division = name.text.replace('\n', '').strip()
         lp = stat.dd.text.split('\n')[1].strip()
-        rank.append((division, lp))
-    print(rank)
+        rank.append(get_elo_from_rank(division, lp))
     return rank
 
 
@@ -29,7 +35,7 @@ def get_all_ranks(summoner_name):
     i = 1
     while True:
         r = requests.get(f"https://lolchess.gg/profile/na/{summoner_name}/s5/lp_history/{i}")
-        soup = BeautifulSoup(r.content)
+        soup = BeautifulSoup(r.content, features="html.parser")
         stats = soup.find_all('div', 'stats')
         names = soup.find_all('span', 'name')
 
@@ -43,12 +49,7 @@ def get_all_ranks(summoner_name):
         last_ranks_len = len(all_ranks)
         i += 1
     
-    return all_ranks
-
-
-def get_elo_from_rank(rank, lp):
-    division, tier = rank.split(' ')
-    return ELO_MAP[division] - int(tier) * 100 + int(lp)
+    return all_ranks[::-1]
 
 
 if __name__ == "__main__":
@@ -57,8 +58,6 @@ if __name__ == "__main__":
     summoner_name = sys.argv[1]
 
     ranks = get_all_ranks(summoner_name)
-
-    normalized_ranks = [get_elo_from_rank(*rank) for rank in ranks[::-1]]
 
 
     ax = plt.gca()
@@ -76,5 +75,5 @@ if __name__ == "__main__":
     ax.grid(linestyle='-')
     plt.title(f"{summoner_name} Set 5 match history")
 
-    plt.plot(normalized_ranks)
+    plt.plot(ranks)
     plt.show()
