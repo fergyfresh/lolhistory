@@ -10,6 +10,7 @@ ELO_MAP = {
     "Gold": 1200,
     "Platinum": 1600,
     "Diamond": 2000,
+    "Master": 2400,
 }
 
 
